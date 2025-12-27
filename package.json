@@ -1,0 +1,16 @@
+{
+  "name": "my-worker",
+  "version": "1.0.0",
+  "description": "A Cloudflare Worker deployed via GitHub Actions",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "keywords": ["cloudflare", "workers", "edge"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

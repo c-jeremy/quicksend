@@ -1,0 +1,10 @@
+name = "my-worker"
+main = "src/index.js"
+compatibility_date = "2024-12-27"
+
+# 取消注释以配置多环境
+# [env.production]
+# name = "my-worker-prod"
+
+# [env.staging]
+# name = "my-worker-staging"
