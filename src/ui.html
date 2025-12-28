@@ -52,6 +52,34 @@
             z-index: 10;
         }
 
+        /* Responsive Design for Mobile */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 200px 1fr; /* Sidebar at top, smaller height */
+                height: 95vh;
+                gap: 1rem;
+            }
+
+            .sidebar {
+                padding: 1rem;
+            }
+
+            .my-profile {
+                margin-bottom: 0.5rem;
+                padding-bottom: 0.5rem;
+            }
+
+            .online-users-list {
+                /* On mobile, let it scroll horizontally if we wanted, but vertical list is fine if limited height */
+                max-height: 120px;
+            }
+
+            .main-area h2 {
+                font-size: 1.2rem;
+            }
+        }
+
         /* Sidebar: User Profile & Online List */
         .sidebar {
             background: var(--glass);
@@ -126,6 +154,7 @@
             align-items: center;
             position: relative;
             overflow: hidden;
+            padding: 1rem;
         }
 
         .drop-zone {
@@ -138,6 +167,7 @@
             border: 2px dashed rgba(255,255,255,0.2);
             border-radius: 16px;
             transition: all 0.3s ease;
+            padding: 10px;
         }
 
         .drop-zone.drag-over {
@@ -150,6 +180,8 @@
             display: flex;
             gap: 1rem;
             margin-top: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .btn {
@@ -163,6 +195,8 @@
             transition: transform 0.2s;
             text-transform: uppercase;
             letter-spacing: 1px;
+            /* Touch target size */
+            min-height: 44px;
         }
 
         .btn:hover {
@@ -175,6 +209,7 @@
             display: flex;
             gap: 10px;
             width: 80%;
+            max-width: 400px;
         }
 
         input[type="text"] {
@@ -219,6 +254,7 @@
             border-radius: 12px;
             text-align: center;
             max-width: 400px;
+            width: 90%;
             box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
         }
 
