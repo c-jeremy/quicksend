@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickSend | Hyper-Fast Transfer</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Scripts -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/animejs@3.2.1/lib/anime.min.js"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --dark-bg: #050510;
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--dark-bg);
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #canvas-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            height: 80vh;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            z-index: 10;
+        }
+
+        /* Sidebar: User Profile & Online List */
+        .sidebar {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .my-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        .online-users-list {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 5px;
+        }
+
+        .user-item:hover, .user-item.selected {
+            background: rgba(255,255,255,0.1);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #00ff88;
+            border-radius: 50%;
+            box-shadow: 0 0 5px #00ff88;
+        }
+
+        /* Main Area: Transfer Zone */
+        .main-area {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drop-zone {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .drop-zone.drag-over {
+            border-color: var(--neon-blue);
+            background: rgba(0, 243, 255, 0.05);
+            box-shadow: inset 0 0 20px rgba(0, 243, 255, 0.1);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--neon-purple);
+        }
+
+        .input-group {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            width: 80%;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 12px;
+            border-radius: 8px;
+            color: white;
+            font-family: inherit;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Animations */
+        .shockwave {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid var(--neon-blue);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Notifications/Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal {
+            background: #1a1a2e;
+            border: 1px solid var(--neon-blue);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
+        }
+
+    </style>
+</head>
+<body x-data="app()">
+
+    <canvas id="canvas-bg"></canvas>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="my-profile">
+                <div class="avatar" x-text="myInitials"></div>
+                <div>
+                    <div style="font-weight: bold;" x-text="username"></div>
+                    <div style="font-size: 0.8rem; opacity: 0.7;">Online</div>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Nearby Devices</h3>
+            <div class="online-users-list">
+                <template x-for="user in users" :key="user.id">
+                    <div class="user-item"
+                         :class="{'selected': selectedUser && selectedUser.id === user.id}"
+                         @click="selectUser(user)">
+                        <div class="status-dot"></div>
+                        <div x-text="user.username"></div>
+                    </div>
+                </template>
+                <div x-show="users.length === 0" style="opacity: 0.5; font-style: italic; padding: 10px;">Scanning for devices...</div>
+            </div>
+        </div>
+
+        <!-- Main Area -->
+        <div class="main-area"
+             @dragover.prevent="dragOver = true"
+             @dragleave.prevent="dragOver = false"
+             @drop.prevent="handleDrop($event)">
+
+            <div class="drop-zone" :class="{'drag-over': dragOver}">
+                <template x-if="!selectedUser">
+                    <div style="text-align: center;">
+                        <h2 style="margin-bottom: 10px;">Select a device to start</h2>
+                        <p style="opacity: 0.7;">Click a user on the left sidebar</p>
+                    </div>
+                </template>
+
+                <template x-if="selectedUser">
+                    <div style="text-align: center; width: 100%;">
+                        <h2 x-text="'Send to ' + selectedUser.username"></h2>
+                        <div style="font-size: 4rem; margin: 2rem;">🚀</div>
+                        <p style="opacity: 0.7;">Drag & Drop files here or</p>
+
+                        <div class="action-buttons">
+                            <button class="btn" @click="$refs.fileInput.click()">Choose File</button>
+                        </div>
+                        <input x-ref="fileInput" type="file" @change="handleFileSelect($event)">
+
+                        <div class="input-group">
+                            <input type="text" x-model="textMessage" placeholder="Type a message or paste a URL..." @keyup.enter="sendText()">
+                            <button class="btn" @click="sendText()">Send</button>
+                        </div>
+                    </div>
+                </template>
+
+                <div x-show="uploading" style="margin-top: 20px;">
+                    <p>Uploading... <span x-text="uploadProgress + '%'"></span></p>
+                    <div style="width: 200px; height: 4px; background: rgba(255,255,255,0.1); margin-top: 5px;">
+                        <div :style="'width: ' + uploadProgress + '%; height: 100%; background: var(--neon-blue);'"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Incoming Request Modal -->
+    <template x-if="incomingRequest">
+        <div class="modal-overlay">
+            <div class="modal">
+                <h3 style="margin-bottom: 1rem;">Incoming Transmission!</h3>
+                <p style="margin-bottom: 1rem;">
+                    <strong x-text="incomingRequest.sender"></strong> is sending you <br>
+                    <span style="color: var(--neon-blue)" x-text="incomingRequest.type === 'file' ? incomingRequest.filename : 'a message'"></span>
+                </p>
+                <div class="action-buttons" style="justify-content: center;">
+                    <button class="btn" @click="acceptRequest()">Accept</button>
+                    <button class="btn" style="background: rgba(255,255,255,0.1);" @click="incomingRequest = null">Decline</button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        // --- Background Animation (Stars/Particles) ---
+        const canvas = document.getElementById('canvas-bg');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const stars = [];
+        for(let i=0; i<100; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 2,
+                speed: Math.random() * 0.5
+            });
+        }
+
+        function animateBg() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#fff';
+            stars.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+                star.y -= star.speed;
+                if(star.y < 0) star.y = canvas.height;
+            });
+            requestAnimationFrame(animateBg);
+        }
+        animateBg();
+
+        // --- Alpine.js Application ---
+        function app() {
+            return {
+                supabase: null,
+                username: 'User-' + Math.floor(Math.random() * 10000),
+                myId: crypto.randomUUID(),
+                users: [],
+                selectedUser: null,
+                channel: null,
+
+                dragOver: false,
+                textMessage: '',
+                uploading: false,
+                uploadProgress: 0,
+
+                incomingRequest: null, // { sender, type, content, filename }
+
+                get myInitials() {
+                    return this.username.substring(0, 2).toUpperCase();
+                },
+
+                init() {
+                    // Initialize Supabase
+                    const SUPABASE_URL = '{{SUPABASE_URL}}';
+                    const SUPABASE_KEY = '{{SUPABASE_ANON_KEY}}';
+
+                    this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+                    // Join Presence Channel
+                    this.channel = this.supabase.channel('quicksend-room');
+
+                    this.channel
+                        .on('presence', { event: 'sync' }, () => {
+                            const state = this.channel.presenceState();
+                            this.users = [];
+                            for (const id in state) {
+                                state[id].forEach(user => {
+                                    if (user.id !== this.myId) {
+                                        this.users.push(user);
+                                    }
+                                });
+                            }
+                        })
+                        .on('broadcast', { event: 'signal' }, (payload) => {
+                            if (payload.payload.targetId === this.myId) {
+                                this.handleIncomingSignal(payload.payload);
+                            }
+                        })
+                        .subscribe(async (status) => {
+                            if (status === 'SUBSCRIBED') {
+                                await this.channel.track({
+                                    id: this.myId,
+                                    username: this.username,
+                                    online_at: new Date().toISOString(),
+                                });
+                            }
+                        });
+                },
+
+                selectUser(user) {
+                    this.selectedUser = user;
+                },
+
+                async handleFileSelect(event) {
+                    const file = event.target.files[0];
+                    if (file) this.uploadFile(file);
+                },
+
+                async handleDrop(event) {
+                    this.dragOver = false;
+                    const file = event.dataTransfer.files[0];
+                    if (file && this.selectedUser) {
+                        this.uploadFile(file);
+                    } else if (!this.selectedUser) {
+                        alert("Select a user first!");
+                    }
+                },
+
+                async uploadFile(file) {
+                    if (!this.selectedUser) return;
+
+                    this.uploading = true;
+                    this.uploadProgress = 0;
+
+                    // 1. Get Presigned URL from Worker
+                    const filename = `${Date.now()}-${file.name}`;
+                    const res = await fetch('/api/upload-url', {
+                        method: 'POST',
+                        body: JSON.stringify({ filename, fileType: file.type })
+                    });
+                    const { uploadUrl, downloadUrl, key } = await res.json();
+
+                    // 2. Upload to R2 directly
+                    // Simulating progress since fetch doesn't support it natively easily without XHR
+                    const progressInterval = setInterval(() => {
+                        if (this.uploadProgress < 90) this.uploadProgress += 10;
+                    }, 200);
+
+                    try {
+                        await fetch(uploadUrl, {
+                            method: 'PUT',
+                            body: file,
+                            headers: { 'Content-Type': file.type }
+                        });
+
+                        clearInterval(progressInterval);
+                        this.uploadProgress = 100;
+
+                        // Visual Shockwave Effect
+                        this.triggerShockwave();
+
+                        // 3. Signal Receiver
+                        this.channel.send({
+                            type: 'broadcast',
+                            event: 'signal',
+                            payload: {
+                                targetId: this.selectedUser.id,
+                                sender: this.username,
+                                type: 'file',
+                                content: downloadUrl,
+                                filename: file.name
+                            }
+                        });
+
+                        setTimeout(() => { this.uploading = false; this.uploadProgress = 0; }, 1000);
+
+                    } catch (err) {
+                        console.error(err);
+                        alert('Upload failed');
+                        clearInterval(progressInterval);
+                        this.uploading = false;
+                    }
+                },
+
+                sendText() {
+                    if (!this.selectedUser || !this.textMessage) return;
+
+                    this.triggerShockwave();
+
+                    this.channel.send({
+                        type: 'broadcast',
+                        event: 'signal',
+                        payload: {
+                            targetId: this.selectedUser.id,
+                            sender: this.username,
+                            type: 'text',
+                            content: this.textMessage
+                        }
+                    });
+
+                    this.textMessage = '';
+                },
+
+                handleIncomingSignal(data) {
+                    // Trigger visual effect on receiver side too
+                    this.triggerShockwave(true);
+
+                    if (data.type === 'text') {
+                        // Check if URL
+                        if (this.isValidUrl(data.content)) {
+                            // Auto open URL in new tab
+                            window.open(data.content, '_blank');
+
+                            // Show notification
+                            this.incomingRequest = {
+                                sender: data.sender,
+                                type: 'link',
+                                content: data.content
+                            };
+                        } else {
+                            this.incomingRequest = {
+                                sender: data.sender,
+                                type: 'text',
+                                content: data.content
+                            };
+                        }
+                    } else if (data.type === 'file') {
+                        this.incomingRequest = data;
+                    }
+                },
+
+                acceptRequest() {
+                    if (this.incomingRequest.type === 'file') {
+                        window.open(this.incomingRequest.content, '_blank');
+                    } else if (this.incomingRequest.type === 'text') {
+                        // Maybe copy to clipboard?
+                        navigator.clipboard.writeText(this.incomingRequest.content);
+                        alert('Copied to clipboard!');
+                    }
+                    this.incomingRequest = null;
+                },
+
+                isValidUrl(string) {
+                    try {
+                        new URL(string);
+                        return true;
+                    } catch (_) {
+                        return false;
+                    }
+                },
+
+                triggerShockwave(isIncoming = false) {
+                    // Create shockwave element
+                    const wave = document.createElement('div');
+                    wave.classList.add('shockwave');
+                    document.body.appendChild(wave);
+
+                    // Center it
+                    const x = window.innerWidth / 2;
+                    const y = window.innerHeight / 2;
+
+                    // Color based on incoming/outgoing
+                    const color = isIncoming ? '#bc13fe' : '#00f3ff';
+
+                    anime({
+                        targets: wave,
+                        left: x,
+                        top: y,
+                        width: [0, 2000],
+                        height: [0, 2000],
+                        translateX: '-50%',
+                        translateY: '-50%',
+                        borderColor: color,
+                        opacity: [1, 0],
+                        borderWidth: [5, 0],
+                        duration: 1500,
+                        easing: 'easeOutExpo',
+                        complete: () => wave.remove()
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>

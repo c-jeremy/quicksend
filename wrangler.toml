@@ -1,10 +1,18 @@
-name = "my-worker"
+name = "quicksend"
 main = "src/index.js"
 compatibility_date = "2024-12-27"
 
-# 取消注释以配置多环境
-# [env.production]
-# name = "my-worker-prod"
+# WARNING: Secrets are hardcoded here for the purpose of this prototype/sandbox environment.
+# In a production environment, NEVER commit secrets to version control.
+# Use `wrangler secret put` instead.
+[vars]
+R2_ACCESS_KEY_ID = "f2213734cfac101f025f8a38f3b55c07"
+R2_SECRET_ACCESS_KEY = "18cf7a71bc1c2078ae0a8d3079af6833c93301fd550fe693765ec6fb5c7a4d42"
+R2_ENDPOINT = "https://c08dcc5178b4aa094ce201277194d553.r2.cloudflarestorage.com"
+R2_BUCKET_NAME = "quicksend"
+SUPABASE_URL = "https://fmehytdhgbwxixsolaxl.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtZWh5dGRoZ2J3eGl4c29sYXhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4NDUxMDUsImV4cCI6MjA4MjQyMTEwNX0.bDMkkHLsnelAGKV3FAM_9UGFUbVmO3i52MmrTnvRjgo"
 
-# [env.staging]
-# name = "my-worker-staging"
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
