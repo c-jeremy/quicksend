@@ -841,12 +841,24 @@
     </template>
 
     <script>
+        function detectPlatform() {
+            const ua = navigator.userAgent;
+            const platform = navigator.platform;
+
+            if (/iPad|iPhone|iPod/.test(ua)) return 'iOS';
+            if (/Mac/.test(platform) && !(/iPad|iPhone|iPod/.test(ua))) return 'macOS';
+            if (/Win/.test(platform)) return 'Windows';
+            if (/Android/.test(ua)) return 'Android';
+            if (/Linux/.test(platform)) return 'Linux';
+            return 'Unknown';
+        }
+
         function app() {
             return {
                 supabase: null,
                 username: 'User-' + Math.floor(Math.random() * 10000),
                 myId: crypto.randomUUID(),
-                myPlatform: this.detectPlatform(),
+                myPlatform: detectPlatform(),
                 users: [],
                 selectedUser: null,
                 channel: null,
@@ -869,18 +881,6 @@
 
                 get myDeviceColor() {
                     return this.getDeviceColor(this.myPlatform);
-                },
-
-                detectPlatform() {
-                    const ua = navigator.userAgent;
-                    const platform = navigator.platform;
-
-                    if (/iPad|iPhone|iPod/.test(ua)) return 'iOS';
-                    if (/Mac/.test(platform) && !(/iPad|iPhone|iPod/.test(ua))) return 'macOS';
-                    if (/Win/.test(platform)) return 'Windows';
-                    if (/Android/.test(ua)) return 'Android';
-                    if (/Linux/.test(platform)) return 'Linux';
-                    return 'Unknown';
                 },
 
                 getDeviceIcon(platform) {
@@ -920,6 +920,10 @@
                 },
 
                 init() {
+                    console.log('[QuickSend] Initializing...');
+                    console.log('[QuickSend] My ID:', this.myId);
+                    console.log('[QuickSend] My Platform:', this.myPlatform);
+
                     const SUPABASE_URL = '{{SUPABASE_URL}}';
                     const SUPABASE_KEY = '{{SUPABASE_ANON_KEY}}';
 
@@ -935,7 +939,10 @@
 
                     this.channel
                         .on('presence', { event: 'sync' }, () => {
+                            console.log('[QuickSend] Presence sync');
                             const state = this.channel.presenceState();
+                            console.log('[QuickSend] Presence state:', state);
+                            
                             const currentUsers = [];
                             for (const userId in state) {
                                 const presenceList = state[userId];
@@ -944,21 +951,32 @@
                                 });
                             }
                             this.users = currentUsers;
+                            console.log('[QuickSend] Users:', this.users.length);
+                        })
+                        .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+                            console.log('[QuickSend] User joined:', newPresences);
+                        })
+                        .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+                            console.log('[QuickSend] User left:', leftPresences);
                         })
                         .on('broadcast', { event: 'signal' }, (payload) => {
+                            console.log('[QuickSend] Signal received:', payload);
                             if (payload.payload.targetId === this.myId) {
                                 this.handleIncomingSignal(payload.payload);
                             }
                         })
                         .subscribe(async (status) => {
+                            console.log('[QuickSend] Channel status:', status);
                             if (status === 'SUBSCRIBED') {
                                 this.connectionStatus = 'Connected';
+                                console.log('[QuickSend] Tracking presence...');
                                 await this.channel.track({
                                     id: this.myId,
                                     username: this.username,
                                     platform: this.myPlatform,
                                     online_at: new Date().toISOString(),
                                 });
+                                console.log('[QuickSend] Presence tracked');
                             } else if (status === 'CHANNEL_ERROR') {
                                 this.connectionStatus = 'Error';
                             } else if (status === 'TIMED_OUT') {
