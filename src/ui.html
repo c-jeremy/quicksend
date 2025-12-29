@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuickSend | Hyper-Fast Transfer</title>
-    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600&display=swap" rel="stylesheet">
-    <!-- Scripts -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/animejs@3.2.1/lib/anime.min.js"></script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
@@ -52,35 +50,20 @@
             z-index: 10;
         }
 
-        /* Responsive Design for Mobile */
         @media (max-width: 768px) {
             .container {
                 grid-template-columns: 1fr;
-                grid-template-rows: 200px 1fr; /* Sidebar at top, smaller height */
+                grid-template-rows: 200px 1fr;
                 height: 95vh;
                 gap: 1rem;
             }
 
-            .sidebar {
-                padding: 1rem;
-            }
-
-            .my-profile {
-                margin-bottom: 0.5rem;
-                padding-bottom: 0.5rem;
-            }
-
-            .online-users-list {
-                /* On mobile, let it scroll horizontally if we wanted, but vertical list is fine if limited height */
-                max-height: 120px;
-            }
-
-            .main-area h2 {
-                font-size: 1.2rem;
-            }
+            .sidebar { padding: 1rem; }
+            .my-profile { margin-bottom: 0.5rem; padding-bottom: 0.5rem; }
+            .online-users-list { max-height: 120px; }
+            .main-area h2 { font-size: 1.2rem; }
         }
 
-        /* Sidebar: User Profile & Online List */
         .sidebar {
             background: var(--glass);
             backdrop-filter: blur(10px);
@@ -140,11 +123,18 @@
             background: #00ff88;
             border-radius: 50%;
             box-shadow: 0 0 5px #00ff88;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
         .status-dot.offline {
             background: #ff0055;
             box-shadow: 0 0 5px #ff0055;
+            animation: none;
         }
 
         .status-dot.connecting {
@@ -152,7 +142,6 @@
             box-shadow: 0 0 5px #ffcc00;
         }
 
-        /* Main Area: Transfer Zone */
         .main-area {
             background: var(--glass);
             backdrop-filter: blur(10px);
@@ -205,7 +194,6 @@
             transition: transform 0.2s;
             text-transform: uppercase;
             letter-spacing: 1px;
-            /* Touch target size */
             min-height: 44px;
         }
 
@@ -236,7 +224,6 @@
             display: none;
         }
 
-        /* Animations */
         .shockwave {
             position: absolute;
             border-radius: 50%;
@@ -245,7 +232,6 @@
             pointer-events: none;
         }
 
-        /* Notifications/Modals */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -268,9 +254,21 @@
             box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
         }
 
+        .debug-info {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-family: monospace;
+            max-width: 300px;
+            z-index: 1000;
+        }
     </style>
 </head>
-<body x-data="app()">
+<body x-data="app()" x-init="init()">
 
     <canvas id="canvas-bg"></canvas>
 
@@ -291,17 +289,24 @@
                 </div>
             </div>
 
-            <h3 style="margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Nearby Devices</h3>
+            <h3 style="margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
+                Nearby Devices (<span x-text="users.length"></span>)
+            </h3>
             <div class="online-users-list">
-                <template x-for="user in users" :key="user.id">
+                <template x-for="(user, index) in users" :key="user.id || index">
                     <div class="user-item"
                          :class="{'selected': selectedUser && selectedUser.id === user.id}"
                          @click="selectUser(user)">
                         <div class="status-dot"></div>
-                        <div x-text="user.username"></div>
+                        <div>
+                            <div x-text="user.username || 'Unknown User'"></div>
+                            <div style="font-size: 0.7rem; opacity: 0.5;" x-text="'ID: ' + (user.id ? user.id.substring(0, 8) : 'N/A')"></div>
+                        </div>
                     </div>
                 </template>
-                <div x-show="users.length === 0" style="opacity: 0.5; font-style: italic; padding: 10px;">Scanning for devices...</div>
+                <div x-show="users.length === 0" style="opacity: 0.5; font-style: italic; padding: 10px;">
+                    Scanning for devices...
+                </div>
             </div>
         </div>
 
@@ -321,7 +326,7 @@
 
                 <template x-if="selectedUser">
                     <div style="text-align: center; width: 100%;">
-                        <h2 x-text="'Send to ' + selectedUser.username"></h2>
+                        <h2 x-text="'Send to ' + (selectedUser.username || 'User')"></h2>
                         <div style="font-size: 4rem; margin: 2rem;">🚀</div>
                         <p style="opacity: 0.7;">Drag & Drop files here or</p>
 
@@ -364,8 +369,16 @@
         </div>
     </template>
 
+    <!-- Debug Info -->
+    <div class="debug-info" x-show="showDebug">
+        <div><strong>Debug Info:</strong></div>
+        <div>Users Count: <span x-text="users.length"></span></div>
+        <div>My ID: <span x-text="myId.substring(0, 8)"></span></div>
+        <div>Status: <span x-text="connectionStatus"></span></div>
+    </div>
+
     <script>
-        // --- Background Animation (Stars/Particles) ---
+        // Background Animation
         const canvas = document.getElementById('canvas-bg');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
@@ -395,7 +408,7 @@
         }
         animateBg();
 
-        // --- Alpine.js Application ---
+        // Alpine.js Application
         function app() {
             return {
                 supabase: null,
@@ -405,26 +418,26 @@
                 selectedUser: null,
                 channel: null,
                 connectionStatus: 'Connecting...',
+                showDebug: true,
 
                 dragOver: false,
                 textMessage: '',
                 uploading: false,
                 uploadProgress: 0,
 
-                incomingRequest: null, // { sender, type, content, filename }
+                incomingRequest: null,
 
                 get myInitials() {
                     return this.username.substring(0, 2).toUpperCase();
                 },
 
                 init() {
-                    // Initialize Supabase
-                    console.log('[QuickSend] Initializing App...');
+                    console.log('[QuickSend] 🚀 Initializing App...');
                     const SUPABASE_URL = '{{SUPABASE_URL}}';
                     const SUPABASE_KEY = '{{SUPABASE_ANON_KEY}}';
 
-                    console.log('[QuickSend] Creating Supabase Client...');
-                    this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                    console.log('[QuickSend] 📡 Creating Supabase Client...');
+                    this.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
                         realtime: {
                             params: {
                                 eventsPerSecond: 10,
@@ -432,69 +445,93 @@
                         },
                     });
 
-                    console.log(`[QuickSend] My User ID: ${this.myId}`);
-                    console.log(`[QuickSend] My Username: ${this.username}`);
+                    console.log(`[QuickSend] 👤 My User ID: ${this.myId}`);
+                    console.log(`[QuickSend] 📛 My Username: ${this.username}`);
 
                     // Join Presence Channel
-                    console.log('[QuickSend] Creating channel "quicksend-room"...');
+                    console.log('[QuickSend] 🔌 Creating channel "quicksend-room"...');
                     this.channel = this.supabase.channel('quicksend-room');
 
                     this.channel
                         .on('presence', { event: 'sync' }, () => {
-    const state = this.channel.presenceState();
-    
-    this.users = Object.entries(state)
-        .filter(([userId]) => userId !== this.myId)
-        .flatMap(([_, presences]) => presences);
-    
-    console.log('[QuickSend] Processed User List:', this.users);
-})
+                            console.log('[QuickSend] 🔄 EVENT: Presence Sync');
+                            const state = this.channel.presenceState();
+                            console.log('[QuickSend] 📊 Raw Presence State:', state);
+
+                            // FIX: 正确提取用户列表
+                            const currentUsers = [];
+                            for (const userId in state) {
+                                const presenceList = state[userId];
+                                console.log(`[QuickSend] 🔍 Processing userId: ${userId}`, presenceList);
+                                
+                                presenceList.forEach(presence => {
+                                    console.log('[QuickSend] 👀 Presence object:', presence);
+                                    if (userId !== this.myId) {
+                                        currentUsers.push(presence);
+                                        console.log('[QuickSend] ✅ Added user:', presence.username);
+                                    } else {
+                                        console.log('[QuickSend] ⏭️  Skipping self');
+                                    }
+                                });
+                            }
+
+                            // 强制触发响应式更新
+                            this.users = currentUsers;
+                            console.log('[QuickSend] 📝 Processed User List:', JSON.parse(JSON.stringify(this.users)));
+                            console.log('[QuickSend] 📊 Total users count:', this.users.length);
+
+                            // 触发Alpine重新渲染
+                            this.$nextTick(() => {
+                                console.log('[QuickSend] ✨ UI should update now with', this.users.length, 'users');
+                            });
+                        })
                         .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-                            console.log('[QuickSend] EVENT: Presence Join', { key, newPresences });
+                            console.log('[QuickSend] 👋 EVENT: Presence Join', { key, newPresences });
                         })
                         .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-                            console.log('[QuickSend] EVENT: Presence Leave', { key, leftPresences });
+                            console.log('[QuickSend] 👋 EVENT: Presence Leave', { key, leftPresences });
                         })
                         .on('broadcast', { event: 'signal' }, (payload) => {
-                            console.log('[QuickSend] EVENT: Broadcast Signal Received', payload);
+                            console.log('[QuickSend] 📨 EVENT: Broadcast Signal Received', payload);
                             if (payload.payload.targetId === this.myId) {
-                                console.log('[QuickSend] Signal is for me!');
+                                console.log('[QuickSend] 🎯 Signal is for me!');
                                 this.handleIncomingSignal(payload.payload);
                             } else {
-                                console.log(`[QuickSend] Signal ignored (Target: ${payload.payload.targetId})`);
+                                console.log(`[QuickSend] ⏭️  Signal ignored (Target: ${payload.payload.targetId})`);
                             }
                         })
                         .subscribe(async (status, err) => {
-                            console.log(`[QuickSend] Channel Status Changed: ${status}`);
+                            console.log(`[QuickSend] 📡 Channel Status Changed: ${status}`);
 
                             if (status === 'SUBSCRIBED') {
                                 this.connectionStatus = 'Connected';
-                                console.log('[QuickSend] Successfully subscribed! Tracking presence now...');
+                                console.log('[QuickSend] ✅ Successfully subscribed! Tracking presence now...');
                                 try {
                                     const trackStatus = await this.channel.track({
                                         id: this.myId,
                                         username: this.username,
                                         online_at: new Date().toISOString(),
                                     });
-                                    console.log('[QuickSend] Presence Track Result:', trackStatus);
+                                    console.log('[QuickSend] 📍 Presence Track Result:', trackStatus);
                                 } catch (e) {
-                                    console.error('[QuickSend] Error tracking presence:', e);
+                                    console.error('[QuickSend] ❌ Error tracking presence:', e);
                                     this.connectionStatus = 'Track Error';
                                 }
                             } else if (status === 'CHANNEL_ERROR') {
                                 this.connectionStatus = 'Error';
-                                console.error('[QuickSend] Channel Error:', err);
+                                console.error('[QuickSend] ❌ Channel Error:', err);
                             } else if (status === 'TIMED_OUT') {
                                 this.connectionStatus = 'Timed Out';
-                                console.warn('[QuickSend] Channel Timed Out');
+                                console.warn('[QuickSend] ⏱️  Channel Timed Out');
                             } else if (status === 'CLOSED') {
                                 this.connectionStatus = 'Disconnected';
-                                console.log('[QuickSend] Channel Closed');
+                                console.log('[QuickSend] 🔌 Channel Closed');
                             }
                         });
                 },
 
                 selectUser(user) {
+                    console.log('[QuickSend] 🎯 Selected user:', user);
                     this.selectedUser = user;
                 },
 
@@ -519,7 +556,6 @@
                     this.uploading = true;
                     this.uploadProgress = 0;
 
-                    // 1. Get Presigned URL from Worker
                     const filename = `${Date.now()}-${file.name}`;
                     const res = await fetch('/api/upload-url', {
                         method: 'POST',
@@ -527,8 +563,6 @@
                     });
                     const { uploadUrl, downloadUrl, key } = await res.json();
 
-                    // 2. Upload to R2 directly
-                    // Simulating progress since fetch doesn't support it natively easily without XHR
                     const progressInterval = setInterval(() => {
                         if (this.uploadProgress < 90) this.uploadProgress += 10;
                     }, 200);
@@ -542,11 +576,8 @@
 
                         clearInterval(progressInterval);
                         this.uploadProgress = 100;
-
-                        // Visual Shockwave Effect
                         this.triggerShockwave();
 
-                        // 3. Signal Receiver
                         this.channel.send({
                             type: 'broadcast',
                             event: 'signal',
@@ -559,7 +590,10 @@
                             }
                         });
 
-                        setTimeout(() => { this.uploading = false; this.uploadProgress = 0; }, 1000);
+                        setTimeout(() => { 
+                            this.uploading = false; 
+                            this.uploadProgress = 0; 
+                        }, 1000);
 
                     } catch (err) {
                         console.error(err);
@@ -589,16 +623,11 @@
                 },
 
                 handleIncomingSignal(data) {
-                    // Trigger visual effect on receiver side too
                     this.triggerShockwave(true);
 
                     if (data.type === 'text') {
-                        // Check if URL
                         if (this.isValidUrl(data.content)) {
-                            // Auto open URL in new tab
                             window.open(data.content, '_blank');
-
-                            // Show notification
                             this.incomingRequest = {
                                 sender: data.sender,
                                 type: 'link',
@@ -620,7 +649,6 @@
                     if (this.incomingRequest.type === 'file') {
                         window.open(this.incomingRequest.content, '_blank');
                     } else if (this.incomingRequest.type === 'text') {
-                        // Maybe copy to clipboard?
                         navigator.clipboard.writeText(this.incomingRequest.content);
                         alert('Copied to clipboard!');
                     }
@@ -637,16 +665,12 @@
                 },
 
                 triggerShockwave(isIncoming = false) {
-                    // Create shockwave element
                     const wave = document.createElement('div');
                     wave.classList.add('shockwave');
                     document.body.appendChild(wave);
 
-                    // Center it
                     const x = window.innerWidth / 2;
                     const y = window.innerHeight / 2;
-
-                    // Color based on incoming/outgoing
                     const color = isIncoming ? '#bc13fe' : '#00f3ff';
 
                     anime({
