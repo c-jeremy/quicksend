@@ -1441,6 +1441,46 @@
                     return names[platform] || names['Unknown'];
                 },
 
+                openSecureLink(url) {
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.target = '_blank';
+                    link.rel = 'noreferrer noopener';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                },
+
+                async forceDownload(url, filename) {
+    try {
+        // 1. Fetch the data from the URL
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Download failed');
+        
+        // 2. Convert it to a Blob (Binary Large Object)
+        const blob = await response.blob();
+        
+        // 3. Create a local URL for that blob
+        const blobUrl = window.URL.createObjectURL(blob);
+        
+        // 4. Create the "Ghost Link" with the download attribute
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = filename || 'download'; // This forces the download
+        
+        document.body.appendChild(link);
+        link.click();
+        
+        // 5. Cleanup
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+        console.error("Force download failed:", error);
+        // Fallback: if fetch fails (due to CORS), try opening in new tab
+        this.openSecureLink(url);
+    }
+},
+
                 init() {
                     console.log('[QuickSend] Initializing...');
                     console.log('[QuickSend] My ID:', this.myId);
@@ -1596,7 +1636,8 @@
 
                     if (data.type === 'text') {
                         if (this.isValidUrl(data.content)) {
-                            window.open(data.content, '_blank');
+                            // window.open(data.content, '_blank'); THIS WILL ALMOST CERTAINLY BE BLOCKED BY ALMOST ALL BROWSERS
+                            this.openSecureLink(data.content);
                         } else {
                             this.incomingRequest = {
                                 sender: data.sender,
@@ -1611,7 +1652,8 @@
 
                 acceptRequest() {
                     if (this.incomingRequest.type === 'file') {
-                        window.open(this.incomingRequest.content, '_blank');
+                        // window.open(this.incomingRequest.content, '_blank'); MODERN BROWSERS HATE window.open; WE DONT WANT TO BE HATED
+                        this.forceDownload(this.incomingRequest.content, this.incomingRequest.filename);
                     } else if (this.incomingRequest.type === 'text') {
                         navigator.clipboard.writeText(this.incomingRequest.content);
                         alert('Copied to clipboard!');
