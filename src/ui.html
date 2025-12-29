@@ -671,6 +671,7 @@
             background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
             opacity: 0;
             transition: opacity 0.3s ease;
+            pointer-events: none;
         }
 
         .drop-zone.drag-over {
@@ -716,6 +717,8 @@
             gap: 12px;
             flex-wrap: wrap;
             justify-content: center;
+            position: relative; /* Add this line */
+            z-index: 5;         /* Add this line */
         }
 
         .btn {
@@ -766,6 +769,8 @@
             max-width: 440px;
             display: flex;
             gap: 8px;
+            position: relative; /* Add this line */
+            z-index: 5;         /* Add this line */
         }
 
         .text-input {
@@ -806,7 +811,10 @@
             backdrop-filter: blur(20px);
             z-index: 10;
             border-radius: 20px;
+            pointer-events: all; 
         }
+
+        [x-cloak] { display: none !important; }
 
         .transmit-animation {
             width: 160px;
