@@ -142,6 +142,16 @@
             box-shadow: 0 0 5px #00ff88;
         }
 
+        .status-dot.offline {
+            background: #ff0055;
+            box-shadow: 0 0 5px #ff0055;
+        }
+
+        .status-dot.connecting {
+            background: #ffcc00;
+            box-shadow: 0 0 5px #ffcc00;
+        }
+
         /* Main Area: Transfer Zone */
         .main-area {
             background: var(--glass);
@@ -271,7 +281,13 @@
                 <div class="avatar" x-text="myInitials"></div>
                 <div>
                     <div style="font-weight: bold;" x-text="username"></div>
-                    <div style="font-size: 0.8rem; opacity: 0.7;">Online</div>
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; opacity: 0.7;">
+                        <div class="status-dot" :class="{
+                            'offline': connectionStatus === 'Disconnected' || connectionStatus === 'Error' || connectionStatus === 'Timed Out',
+                            'connecting': connectionStatus === 'Connecting...'
+                        }"></div>
+                        <div x-text="connectionStatus"></div>
+                    </div>
                 </div>
             </div>
 
@@ -388,6 +404,7 @@
                 users: [],
                 selectedUser: null,
                 channel: null,
+                connectionStatus: 'Connecting...',
 
                 dragOver: false,
                 textMessage: '',
@@ -402,17 +419,32 @@
 
                 init() {
                     // Initialize Supabase
+                    console.log('[QuickSend] Initializing App...');
                     const SUPABASE_URL = '{{SUPABASE_URL}}';
                     const SUPABASE_KEY = '{{SUPABASE_ANON_KEY}}';
 
-                    this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    console.log('[QuickSend] Creating Supabase Client...');
+                    this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                        realtime: {
+                            params: {
+                                eventsPerSecond: 10,
+                            },
+                        },
+                    });
+
+                    console.log(`[QuickSend] My User ID: ${this.myId}`);
+                    console.log(`[QuickSend] My Username: ${this.username}`);
 
                     // Join Presence Channel
+                    console.log('[QuickSend] Creating channel "quicksend-room"...');
                     this.channel = this.supabase.channel('quicksend-room');
 
                     this.channel
                         .on('presence', { event: 'sync' }, () => {
+                            console.log('[QuickSend] EVENT: Presence Sync');
                             const state = this.channel.presenceState();
+                            console.log('[QuickSend] Raw Presence State:', state);
+
                             this.users = [];
                             for (const id in state) {
                                 state[id].forEach(user => {
@@ -421,19 +453,49 @@
                                     }
                                 });
                             }
+                            console.log('[QuickSend] Processed User List:', JSON.parse(JSON.stringify(this.users)));
+                        })
+                        .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+                            console.log('[QuickSend] EVENT: Presence Join', { key, newPresences });
+                        })
+                        .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+                            console.log('[QuickSend] EVENT: Presence Leave', { key, leftPresences });
                         })
                         .on('broadcast', { event: 'signal' }, (payload) => {
+                            console.log('[QuickSend] EVENT: Broadcast Signal Received', payload);
                             if (payload.payload.targetId === this.myId) {
+                                console.log('[QuickSend] Signal is for me!');
                                 this.handleIncomingSignal(payload.payload);
+                            } else {
+                                console.log(`[QuickSend] Signal ignored (Target: ${payload.payload.targetId})`);
                             }
                         })
-                        .subscribe(async (status) => {
+                        .subscribe(async (status, err) => {
+                            console.log(`[QuickSend] Channel Status Changed: ${status}`);
+
                             if (status === 'SUBSCRIBED') {
-                                await this.channel.track({
-                                    id: this.myId,
-                                    username: this.username,
-                                    online_at: new Date().toISOString(),
-                                });
+                                this.connectionStatus = 'Connected';
+                                console.log('[QuickSend] Successfully subscribed! Tracking presence now...');
+                                try {
+                                    const trackStatus = await this.channel.track({
+                                        id: this.myId,
+                                        username: this.username,
+                                        online_at: new Date().toISOString(),
+                                    });
+                                    console.log('[QuickSend] Presence Track Result:', trackStatus);
+                                } catch (e) {
+                                    console.error('[QuickSend] Error tracking presence:', e);
+                                    this.connectionStatus = 'Track Error';
+                                }
+                            } else if (status === 'CHANNEL_ERROR') {
+                                this.connectionStatus = 'Error';
+                                console.error('[QuickSend] Channel Error:', err);
+                            } else if (status === 'TIMED_OUT') {
+                                this.connectionStatus = 'Timed Out';
+                                console.warn('[QuickSend] Channel Timed Out');
+                            } else if (status === 'CLOSED') {
+                                this.connectionStatus = 'Disconnected';
+                                console.log('[QuickSend] Channel Closed');
                             }
                         });
                 },
