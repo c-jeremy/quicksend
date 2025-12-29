@@ -1482,6 +1482,8 @@
 },
 
                 init() {
+                    if (this.initialized) return; // Prevent double running
+                    this.initialized = true;      
                     console.log('[QuickSend] Initializing...');
                     console.log('[QuickSend] My ID:', this.myId);
                     console.log('[QuickSend] My Platform:', this.myPlatform);
