@@ -11,146 +11,303 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --gray-50: #fafafa;
-            --gray-100: #f5f5f5;
-            --gray-200: #e5e5e5;
-            --gray-300: #d4d4d4;
-            --gray-400: #a3a3a3;
-            --gray-500: #737373;
-            --gray-600: #525252;
-            --gray-700: #404040;
-            --gray-800: #262626;
-            --gray-900: #171717;
-            --blue-500: #3b82f6;
-            --blue-600: #2563eb;
+            --bg-primary: #09090b;
+            --bg-secondary: #18181b;
+            --bg-tertiary: #27272a;
+            --bg-elevated: #1c1c1f;
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-default: rgba(255, 255, 255, 0.1);
+            --border-strong: rgba(255, 255, 255, 0.15);
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --text-tertiary: #71717a;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.5);
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        @font-face {
+            font-family: 'SF Pro Display';
+            src: local('SF Pro Display'), local('-apple-system'), local('BlinkMacSystemFont');
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
-            background: var(--gray-50);
-            color: var(--gray-900);
+            background: var(--bg-primary);
+            color: var(--text-primary);
             height: 100vh;
             overflow: hidden;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         .app-container {
             display: flex;
             height: 100vh;
-            transition: transform 0.1s ease-out;
+            position: relative;
         }
 
-        /* Viewport Shake Effects */
-        @keyframes shake {
-            0%, 100% { transform: translate(0, 0); }
-            10% { transform: translate(-8px, 2px); }
-            20% { transform: translate(8px, -2px); }
-            30% { transform: translate(-8px, -2px); }
-            40% { transform: translate(8px, 2px); }
-            50% { transform: translate(-6px, 1px); }
-            60% { transform: translate(6px, -1px); }
-            70% { transform: translate(-4px, 2px); }
-            80% { transform: translate(4px, -2px); }
-            90% { transform: translate(-2px, 1px); }
+        /* Electromagnetic Field Background */
+        .em-field-bg {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
         }
 
-        .shake {
-            animation: shake 0.6s cubic-bezier(.36,.07,.19,.97);
+        .em-field-bg::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 150vmax;
+            height: 150vmax;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(ellipse at center, 
+                transparent 0%, 
+                transparent 40%,
+                rgba(59, 130, 246, 0.02) 60%,
+                transparent 70%
+            );
+            opacity: 0;
+            transition: opacity 0.6s ease;
         }
 
-        .impact-flash {
+        .app-container.transmitting .em-field-bg::before {
+            opacity: 1;
+            animation: em-pulse-bg 2s ease-in-out infinite;
+        }
+
+        @keyframes em-pulse-bg {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+        }
+
+        /* Impact Effects */
+        .impact-container {
             position: fixed;
             inset: 0;
             pointer-events: none;
             z-index: 9999;
-            background: radial-gradient(circle at center, rgba(59, 130, 246, 0.3) 0%, transparent 70%);
-            animation: flash 0.6s ease-out;
         }
 
-        @keyframes flash {
-            0% { opacity: 1; }
+        .em-shockwave {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100px;
+            height: 100px;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            opacity: 0;
+        }
+
+        .em-shockwave.active {
+            animation: shockwave 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes shockwave {
+            0% {
+                width: 100px;
+                height: 100px;
+                opacity: 0.8;
+                border-width: 3px;
+            }
+            100% {
+                width: 200vmax;
+                height: 200vmax;
+                opacity: 0;
+                border-width: 1px;
+            }
+        }
+
+        .em-particles {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .em-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 50%;
+            opacity: 0;
+            filter: blur(1px);
+            box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent-glow);
+        }
+
+        .em-particle.active {
+            animation: particle-burst 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes particle-burst {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--tx), var(--ty)) scale(0);
+            }
+        }
+
+        .screen-flash {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 9998;
+        }
+
+        .screen-flash.active {
+            animation: screen-flash 0.5s ease-out forwards;
+        }
+
+        @keyframes screen-flash {
+            0% { opacity: 0.6; }
             100% { opacity: 0; }
         }
 
-        .distortion-layer {
+        .viewport-shake {
+            animation: viewport-shake 0.6s cubic-bezier(.36,.07,.19,.97);
+        }
+
+        @keyframes viewport-shake {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            10% { transform: translate(-6px, 2px) rotate(-0.5deg); }
+            20% { transform: translate(6px, -2px) rotate(0.5deg); }
+            30% { transform: translate(-6px, -1px) rotate(-0.3deg); }
+            40% { transform: translate(6px, 1px) rotate(0.3deg); }
+            50% { transform: translate(-4px, 1px) rotate(-0.2deg); }
+            60% { transform: translate(4px, -1px) rotate(0.2deg); }
+            70% { transform: translate(-2px, 1px) rotate(-0.1deg); }
+            80% { transform: translate(2px, -1px) rotate(0.1deg); }
+            90% { transform: translate(-1px, 0px) rotate(0deg); }
+        }
+
+        .scanlines {
             position: fixed;
             inset: 0;
             pointer-events: none;
-            z-index: 9998;
-            backdrop-filter: blur(0px);
-            animation: distort 0.6s ease-out;
+            z-index: 9997;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.03) 2px,
+                rgba(0, 0, 0, 0.03) 4px
+            );
+            opacity: 0;
         }
 
-        @keyframes distort {
-            0%, 100% { backdrop-filter: blur(0px); }
-            20% { backdrop-filter: blur(4px); }
-            40% { backdrop-filter: blur(2px); }
-            60% { backdrop-filter: blur(3px); }
-            80% { backdrop-filter: blur(1px); }
+        .scanlines.active {
+            animation: scanlines-flash 0.3s ease-out forwards;
+        }
+
+        @keyframes scanlines-flash {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
         }
 
         /* Sidebar */
         .sidebar {
             width: 320px;
-            background: white;
-            border-right: 1px solid var(--gray-200);
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-subtle);
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            position: relative;
+            z-index: 1;
         }
 
         .sidebar-header {
             padding: 24px;
-            border-bottom: 1px solid var(--gray-200);
+            border-bottom: 1px solid var(--border-subtle);
         }
 
         .logo {
-            font-size: 22px;
-            font-weight: 700;
-            letter-spacing: -1px;
-            background: linear-gradient(135deg, var(--gray-900) 0%, var(--gray-600) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-icon svg {
+            width: 100%;
+            height: 100%;
         }
 
         .my-profile {
             padding: 20px 24px;
-            border-bottom: 1px solid var(--gray-200);
+            border-bottom: 1px solid var(--border-subtle);
             display: flex;
             align-items: center;
             gap: 14px;
-            background: var(--gray-50);
+            background: var(--bg-elevated);
         }
 
         .avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--blue-500) 0%, var(--blue-600) 100%);
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent) 0%, #1d4ed8 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: 600;
-            font-size: 16px;
+            font-size: 14px;
             flex-shrink: 0;
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+            position: relative;
         }
 
-        .device-icon {
+        .avatar::after {
+            content: '';
             position: absolute;
-            bottom: -2px;
-            right: -2px;
-            width: 18px;
-            height: 18px;
-            background: white;
-            border-radius: 50%;
+            inset: -2px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--accent) 0%, #1d4ed8 100%);
+            opacity: 0.3;
+            z-index: -1;
+            filter: blur(8px);
+        }
+
+        .device-badge {
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            width: 20px;
+            height: 20px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 9px;
-            box-shadow: 0 0 0 2px white;
+            border: 1px solid var(--border-default);
+        }
+
+        .device-badge svg {
+            width: 12px;
+            height: 12px;
         }
 
         .profile-info {
@@ -159,37 +316,64 @@
         }
 
         .username {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             margin-bottom: 4px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            color: var(--text-primary);
         }
 
         .status {
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 13px;
-            color: var(--gray-500);
+            font-size: 12px;
+            color: var(--text-tertiary);
         }
 
-        .status-dot {
-            width: 6px;
-            height: 6px;
+        .status-indicator {
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            background: #10b981;
-            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+            background: var(--success);
+            position: relative;
         }
 
-        .status-dot.offline { 
-            background: #ef4444;
-            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+        .status-indicator::after {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: var(--success);
+            opacity: 0.3;
+            animation: status-pulse 2s ease-in-out infinite;
         }
-        .status-dot.connecting { 
-            background: #f59e0b;
-            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+
+        @keyframes status-pulse {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 0.1; }
+        }
+
+        .status-indicator.offline { 
+            background: var(--danger);
+        }
+        .status-indicator.offline::after {
+            background: var(--danger);
+            animation: none;
+        }
+        .status-indicator.connecting { 
+            background: var(--warning);
+            animation: status-blink 1s ease-in-out infinite;
+        }
+        .status-indicator.connecting::after {
+            animation: none;
+        }
+
+        @keyframes status-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
         }
 
         .users-section {
@@ -198,18 +382,41 @@
             padding: 16px 12px;
         }
 
+        .users-section::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .users-section::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .users-section::-webkit-scrollbar-thumb {
+            background: var(--border-default);
+            border-radius: 3px;
+        }
+
         .section-title {
             font-size: 11px;
-            font-weight: 700;
-            color: var(--gray-400);
+            font-weight: 600;
+            color: var(--text-tertiary);
             text-transform: uppercase;
-            letter-spacing: 0.8px;
+            letter-spacing: 0.5px;
             padding: 8px 12px;
             margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title .count {
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
         }
 
         .user-item {
-            padding: 12px 12px;
+            padding: 12px;
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -218,34 +425,50 @@
             gap: 12px;
             margin-bottom: 4px;
             position: relative;
+            border: 1px solid transparent;
         }
 
         .user-item:hover {
-            background: var(--gray-100);
+            background: var(--bg-tertiary);
+            border-color: var(--border-subtle);
         }
 
         .user-item.selected {
-            background: var(--gray-900);
-            color: white;
+            background: var(--text-primary);
+            border-color: transparent;
+        }
+
+        .user-item.selected .user-name,
+        .user-item.selected .user-device {
+            color: var(--bg-primary);
+        }
+
+        .user-item.selected .user-avatar {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
         }
 
         .user-item.self {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
         }
 
-        .user-item.self::after {
-            content: 'You';
+        .user-item.self:hover {
+            background: transparent;
+            border-color: transparent;
+        }
+
+        .self-badge {
             position: absolute;
             right: 12px;
-            font-size: 11px;
-            font-weight: 700;
+            font-size: 10px;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--gray-400);
-            background: var(--gray-100);
-            padding: 2px 8px;
-            border-radius: 6px;
+            letter-spacing: 0.3px;
+            color: var(--text-tertiary);
+            background: var(--bg-tertiary);
+            padding: 3px 8px;
+            border-radius: 4px;
         }
 
         .user-avatar-wrapper {
@@ -256,19 +479,15 @@
         .user-avatar {
             width: 40px;
             height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--gray-200) 0%, var(--gray-300) 100%);
+            border-radius: 10px;
+            background: var(--bg-tertiary);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
-            color: var(--gray-600);
-        }
-
-        .user-item.selected .user-avatar {
-            background: linear-gradient(135deg, var(--gray-700) 0%, var(--gray-600) 100%);
-            color: white;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
         }
 
         .user-info {
@@ -278,30 +497,66 @@
 
         .user-name {
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 500;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             margin-bottom: 2px;
+            color: var(--text-primary);
+            transition: color 0.2s ease;
         }
 
         .user-device {
             font-size: 12px;
-            color: var(--gray-500);
+            color: var(--text-tertiary);
             display: flex;
             align-items: center;
             gap: 6px;
+            transition: color 0.2s ease;
         }
 
-        .user-item.selected .user-device {
-            color: var(--gray-400);
+        .user-device svg {
+            width: 12px;
+            height: 12px;
+            opacity: 0.7;
         }
 
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: var(--gray-400);
-            font-size: 14px;
+            color: var(--text-tertiary);
+            font-size: 13px;
+        }
+
+        .empty-state-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            opacity: 0.3;
+        }
+
+        .scanning-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            margin-top: 12px;
+        }
+
+        .scanning-dot {
+            width: 4px;
+            height: 4px;
+            background: var(--text-tertiary);
+            border-radius: 50%;
+            animation: scanning 1.4s ease-in-out infinite;
+        }
+
+        .scanning-dot:nth-child(2) { animation-delay: 0.2s; }
+        .scanning-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes scanning {
+            0%, 80%, 100% { transform: scale(1); opacity: 0.4; }
+            40% { transform: scale(1.5); opacity: 1; }
         }
 
         /* Main Area */
@@ -309,22 +564,77 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: var(--gray-50);
+            background: var(--bg-primary);
+            position: relative;
+            z-index: 1;
         }
 
         .main-header {
-            padding: 24px 32px;
-            background: white;
-            border-bottom: 1px solid var(--gray-200);
+            padding: 20px 32px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-subtle);
             display: flex;
             align-items: center;
             justify-content: space-between;
+            min-height: 80px;
         }
 
         .selected-user-info {
             display: flex;
             align-items: center;
             gap: 14px;
+        }
+
+        .connection-line {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-left: 20px;
+        }
+
+        .connection-line-visual {
+            width: 80px;
+            height: 2px;
+            background: var(--border-default);
+            position: relative;
+            border-radius: 1px;
+        }
+
+        .connection-line-visual::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, var(--accent), var(--accent));
+            border-radius: 1px;
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .app-container.transmitting .connection-line-visual::before {
+            transform: scaleX(1);
+            animation: connection-pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes connection-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .connection-status-badge {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-tertiary);
+            background: var(--bg-tertiary);
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .connection-status-badge.active {
+            color: var(--accent);
+            background: rgba(59, 130, 246, 0.1);
         }
 
         .main-content {
@@ -338,9 +648,9 @@
 
         .drop-zone {
             width: 100%;
-            max-width: 640px;
-            min-height: 480px;
-            border: 2px dashed var(--gray-200);
+            max-width: 600px;
+            min-height: 440px;
+            border: 1px solid var(--border-default);
             border-radius: 20px;
             display: flex;
             flex-direction: column;
@@ -349,35 +659,56 @@
             padding: 60px 40px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             text-align: center;
-            background: white;
+            background: var(--bg-secondary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drop-zone::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .drop-zone.drag-over {
-            border-color: var(--blue-500);
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(59, 130, 246, 0.06) 100%);
-            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.12);
+            border-color: var(--accent);
             transform: scale(1.01);
         }
 
+        .drop-zone.drag-over::before {
+            opacity: 1;
+        }
+
         .drop-zone-icon {
-            font-size: 72px;
-            margin-bottom: 24px;
-            opacity: 0.4;
-            filter: grayscale(1);
+            width: 80px;
+            height: 80px;
+            margin-bottom: 28px;
+            color: var(--text-tertiary);
+            opacity: 0.5;
+        }
+
+        .drop-zone-icon svg {
+            width: 100%;
+            height: 100%;
         }
 
         .drop-zone-title {
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
             margin-bottom: 8px;
+            color: var(--text-primary);
         }
 
         .drop-zone-subtitle {
-            color: var(--gray-500);
-            font-size: 15px;
-            margin-bottom: 40px;
+            color: var(--text-tertiary);
+            font-size: 14px;
+            margin-bottom: 36px;
             line-height: 1.5;
+            max-width: 320px;
         }
 
         .actions {
@@ -388,26 +719,30 @@
         }
 
         .btn {
-            padding: 12px 24px;
+            padding: 12px 20px;
             border-radius: 10px;
-            border: 1px solid var(--gray-200);
-            background: white;
-            color: var(--gray-900);
-            font-size: 14px;
-            font-weight: 600;
+            border: 1px solid var(--border-default);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            font-family: inherit;
+        }
+
+        .btn svg {
+            width: 16px;
+            height: 16px;
         }
 
         .btn:hover {
-            background: var(--gray-50);
-            border-color: var(--gray-300);
+            background: var(--bg-elevated);
+            border-color: var(--border-strong);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
         .btn:active {
@@ -415,20 +750,20 @@
         }
 
         .btn-primary {
-            background: var(--gray-900);
-            color: white;
-            border-color: var(--gray-900);
+            background: var(--text-primary);
+            color: var(--bg-primary);
+            border-color: var(--text-primary);
         }
 
         .btn-primary:hover {
-            background: var(--gray-800);
-            border-color: var(--gray-800);
+            background: var(--text-secondary);
+            border-color: var(--text-secondary);
         }
 
         .text-input-group {
-            margin-top: 40px;
+            margin-top: 36px;
             width: 100%;
-            max-width: 480px;
+            max-width: 440px;
             display: flex;
             gap: 8px;
         }
@@ -436,19 +771,23 @@
         .text-input {
             flex: 1;
             padding: 12px 16px;
-            border: 1px solid var(--gray-200);
+            border: 1px solid var(--border-default);
             border-radius: 10px;
             font-size: 14px;
             font-family: inherit;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            background: white;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .text-input::placeholder {
+            color: var(--text-tertiary);
         }
 
         .text-input:focus {
             outline: none;
-            border-color: var(--gray-900);
-            box-shadow: 0 0 0 3px rgba(23, 23, 23, 0.08);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
         input[type="file"] {
@@ -459,172 +798,260 @@
         .transmitting-overlay {
             position: absolute;
             inset: 0;
-            background: rgba(255, 255, 255, 0.97);
+            background: rgba(9, 9, 11, 0.95);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(20px);
             z-index: 10;
             border-radius: 20px;
         }
 
         .transmit-animation {
-            width: 140px;
-            height: 140px;
+            width: 160px;
+            height: 160px;
             position: relative;
-            margin-bottom: 32px;
+            margin-bottom: 36px;
         }
 
-        .transmit-ring {
+        .em-ring {
             position: absolute;
             inset: 0;
-            border: 3px solid var(--blue-500);
+            border: 1px solid var(--accent);
             border-radius: 50%;
-            opacity: 0.3;
-            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            opacity: 0;
         }
 
-        .transmit-ring:nth-child(2) {
-            animation-delay: 0.4s;
+        .em-ring:nth-child(1) { animation: em-ring-pulse 2s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+        .em-ring:nth-child(2) { animation: em-ring-pulse 2s cubic-bezier(0.4, 0, 0.2, 1) infinite 0.4s; }
+        .em-ring:nth-child(3) { animation: em-ring-pulse 2s cubic-bezier(0.4, 0, 0.2, 1) infinite 0.8s; }
+        .em-ring:nth-child(4) { animation: em-ring-pulse 2s cubic-bezier(0.4, 0, 0.2, 1) infinite 1.2s; }
+
+        @keyframes em-ring-pulse {
+            0% {
+                transform: scale(0.3);
+                opacity: 0.8;
+                border-width: 2px;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+                border-width: 1px;
+            }
         }
 
-        .transmit-ring:nth-child(3) {
-            animation-delay: 0.8s;
-        }
-
-        .transmit-core {
+        .em-core {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, var(--blue-500) 0%, var(--blue-600) 100%);
+            width: 56px;
+            height: 56px;
+            background: var(--accent);
             border-radius: 50%;
-            animation: pulse-core 2s ease-in-out infinite;
-            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 0 30px var(--accent-glow),
+                0 0 60px var(--accent-glow),
+                inset 0 0 20px rgba(255, 255, 255, 0.2);
+            animation: em-core-pulse 2s ease-in-out infinite;
         }
 
-        @keyframes pulse-ring {
-            0% {
-                transform: scale(0.7);
-                opacity: 0.6;
-            }
-            100% {
-                transform: scale(1.3);
-                opacity: 0;
-            }
+        .em-core svg {
+            width: 24px;
+            height: 24px;
+            color: white;
         }
 
-        @keyframes pulse-core {
+        @keyframes em-core-pulse {
             0%, 100% {
                 transform: translate(-50%, -50%) scale(1);
+                box-shadow: 
+                    0 0 30px var(--accent-glow),
+                    0 0 60px var(--accent-glow),
+                    inset 0 0 20px rgba(255, 255, 255, 0.2);
             }
             50% {
-                transform: translate(-50%, -50%) scale(1.15);
+                transform: translate(-50%, -50%) scale(1.1);
+                box-shadow: 
+                    0 0 40px var(--accent-glow),
+                    0 0 80px var(--accent-glow),
+                    inset 0 0 20px rgba(255, 255, 255, 0.3);
             }
         }
+
+        .em-field-lines {
+            position: absolute;
+            inset: -20px;
+            pointer-events: none;
+        }
+
+        .em-field-line {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%);
+            opacity: 0.3;
+            transform-origin: center;
+        }
+
+        .em-field-line:nth-child(1) { transform: translate(-50%, -50%) rotate(0deg); }
+        .em-field-line:nth-child(2) { transform: translate(-50%, -50%) rotate(45deg); }
+        .em-field-line:nth-child(3) { transform: translate(-50%, -50%) rotate(90deg); }
+        .em-field-line:nth-child(4) { transform: translate(-50%, -50%) rotate(135deg); }
 
         .transmit-text {
             font-weight: 600;
-            font-size: 18px;
-            margin-bottom: 8px;
+            font-size: 16px;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+            letter-spacing: -0.2px;
         }
 
         .transmit-subtext {
-            color: var(--gray-500);
-            font-size: 14px;
+            color: var(--text-tertiary);
+            font-size: 13px;
+        }
+
+        .transmit-progress {
+            margin-top: 24px;
+            width: 200px;
+            height: 2px;
+            background: var(--bg-tertiary);
+            border-radius: 1px;
+            overflow: hidden;
+        }
+
+        .transmit-progress-bar {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 1px;
+            animation: progress-indeterminate 1.5s ease-in-out infinite;
+        }
+
+        @keyframes progress-indeterminate {
+            0% { transform: translateX(-100%); width: 30%; }
+            50% { width: 60%; }
+            100% { transform: translateX(400%); width: 30%; }
         }
 
         /* Incoming Modal */
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(12px);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 100;
-            animation: fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: modal-fade-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        @keyframes fadeIn {
+        @keyframes modal-fade-in {
             from { opacity: 0; }
             to { opacity: 1; }
         }
 
         .modal {
-            background: white;
+            background: var(--bg-secondary);
             border-radius: 20px;
-            padding: 40px;
-            max-width: 500px;
+            padding: 36px;
+            max-width: 420px;
             width: 90%;
-            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24);
-            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border-default);
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+            animation: modal-slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        @keyframes slideUp {
+        @keyframes modal-slide-up {
             from {
-                transform: translateY(24px);
+                transform: translateY(20px) scale(0.98);
                 opacity: 0;
             }
             to {
-                transform: translateY(0);
+                transform: translateY(0) scale(1);
                 opacity: 1;
             }
         }
 
         .modal-icon {
-            width: 72px;
-            height: 72px;
-            background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
-            border-radius: 50%;
+            width: 64px;
+            height: 64px;
+            background: var(--bg-tertiary);
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 28px;
-            font-size: 36px;
+            margin: 0 auto 24px;
+            color: var(--accent);
+        }
+
+        .modal-icon svg {
+            width: 28px;
+            height: 28px;
         }
 
         .modal-title {
-            font-size: 22px;
-            font-weight: 700;
+            font-size: 18px;
+            font-weight: 600;
             text-align: center;
-            margin-bottom: 8px;
-            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+            letter-spacing: -0.3px;
+            color: var(--text-primary);
         }
 
         .modal-subtitle {
             text-align: center;
-            color: var(--gray-500);
-            margin-bottom: 28px;
-            font-size: 15px;
+            color: var(--text-tertiary);
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .modal-subtitle strong {
+            color: var(--text-secondary);
         }
 
         .modal-content {
-            background: var(--gray-50);
-            padding: 20px;
+            background: var(--bg-tertiary);
+            padding: 16px;
             border-radius: 12px;
-            margin-bottom: 28px;
+            margin-bottom: 24px;
             word-break: break-word;
-            border: 1px solid var(--gray-200);
+            border: 1px solid var(--border-subtle);
         }
 
         .modal-content-text {
-            font-size: 15px;
+            font-size: 14px;
             line-height: 1.6;
-            color: var(--gray-700);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .modal-content-text svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            margin-top: 2px;
+            opacity: 0.6;
         }
 
         .modal-actions {
             display: flex;
-            gap: 12px;
+            gap: 10px;
         }
 
         .modal-actions .btn {
             flex: 1;
+            justify-content: center;
+            padding: 14px 20px;
         }
 
         /* Mobile Responsive */
@@ -635,58 +1062,79 @@
 
             .sidebar {
                 width: 100%;
-                max-height: 45vh;
+                max-height: 40vh;
                 border-right: none;
-                border-bottom: 1px solid var(--gray-200);
-            }
-
-            .users-section {
-                max-height: none;
+                border-bottom: 1px solid var(--border-subtle);
             }
 
             .main-header {
-                padding: 20px 24px;
+                padding: 16px 20px;
+                min-height: auto;
+            }
+
+            .connection-line {
+                display: none;
             }
 
             .main-content {
-                padding: 24px;
+                padding: 20px;
             }
 
             .drop-zone {
-                min-height: 360px;
-                padding: 40px 28px;
+                min-height: 320px;
+                padding: 40px 24px;
             }
 
             .drop-zone-icon {
-                font-size: 56px;
+                width: 60px;
+                height: 60px;
             }
 
             .text-input-group {
                 flex-direction: column;
-                margin-top: 32px;
+                margin-top: 28px;
+            }
+
+            .text-input-group .btn {
+                justify-content: center;
             }
         }
     </style>
 </head>
 <body x-data="app()" x-init="init()">
-    <div class="app-container" :class="{'shake': shaking}">
+    <!-- Impact Effects Container -->
+    <div class="impact-container" x-ref="impactContainer">
+        <div class="em-shockwave" x-ref="shockwave"></div>
+        <div class="em-particles" x-ref="particles"></div>
+    </div>
+    <div class="screen-flash" x-ref="screenFlash"></div>
+    <div class="scanlines" x-ref="scanlines"></div>
+
+    <div class="app-container" :class="{'viewport-shake': shaking, 'transmitting': transmitting}">
+        <div class="em-field-bg"></div>
+
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <div class="logo">QuickSend</div>
+                <div class="logo">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                        </svg>
+                    </div>
+                    QuickSend
+                </div>
             </div>
 
             <div class="my-profile">
                 <div class="user-avatar-wrapper">
                     <div class="avatar" x-text="myInitials"></div>
-                    <div class="device-icon" :style="'color: ' + myDeviceColor">
-                        <i :class="myDeviceIcon"></i>
-                    </div>
+                    <div class="device-badge" x-html="getDeviceSvg(myPlatform)"></div>
                 </div>
                 <div class="profile-info">
                     <div class="username" x-text="username"></div>
                     <div class="status">
-                        <div class="status-dot" :class="{
+                        <div class="status-indicator" :class="{
                             'offline': connectionStatus === 'Disconnected' || connectionStatus === 'Error' || connectionStatus === 'Timed Out',
                             'connecting': connectionStatus === 'Connecting...'
                         }"></div>
@@ -696,7 +1144,10 @@
             </div>
 
             <div class="users-section">
-                <div class="section-title">Nearby (<span x-text="users.length"></span>)</div>
+                <div class="section-title">
+                    Nearby
+                    <span class="count" x-text="users.length"></span>
+                </div>
                 <template x-for="(user, index) in users" :key="user.id || index">
                     <div class="user-item"
                          :class="{
@@ -706,21 +1157,31 @@
                          @click="selectUser(user)">
                         <div class="user-avatar-wrapper">
                             <div class="user-avatar" x-text="user.username ? user.username.substring(0, 2).toUpperCase() : '??'"></div>
-                            <div class="device-icon" :style="'color: ' + getDeviceColor(user.platform)">
-                                <i :class="getDeviceIcon(user.platform)"></i>
-                            </div>
+                            <div class="device-badge" x-html="getDeviceSvg(user.platform)"></div>
                         </div>
                         <div class="user-info">
                             <div class="user-name" x-text="user.username || 'Unknown User'"></div>
                             <div class="user-device">
-                                <i :class="getDeviceIcon(user.platform)" style="font-size: 10px;"></i>
+                                <span x-html="getDeviceSvg(user.platform)"></span>
                                 <span x-text="getPlatformName(user.platform)"></span>
                             </div>
                         </div>
+                        <span x-show="user.id === myId" class="self-badge">You</span>
                     </div>
                 </template>
                 <div x-show="users.length === 0" class="empty-state">
-                    Scanning for devices...
+                    <div class="empty-state-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                    </div>
+                    Scanning for nearby devices
+                    <div class="scanning-indicator">
+                        <div class="scanning-dot"></div>
+                        <div class="scanning-dot"></div>
+                        <div class="scanning-dot"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -731,17 +1192,19 @@
                 <div class="selected-user-info">
                     <div class="user-avatar-wrapper">
                         <div class="user-avatar" x-text="selectedUser ? selectedUser.username.substring(0, 2).toUpperCase() : ''"></div>
-                        <div class="device-icon" :style="'color: ' + getDeviceColor(selectedUser?.platform)">
-                            <i :class="getDeviceIcon(selectedUser?.platform)"></i>
-                        </div>
+                        <div class="device-badge" x-html="getDeviceSvg(selectedUser?.platform)"></div>
                     </div>
                     <div>
                         <div class="username" x-text="selectedUser ? selectedUser.username : ''"></div>
                         <div class="user-device">
-                            <i :class="getDeviceIcon(selectedUser?.platform)" style="font-size: 11px;"></i>
+                            <span x-html="getDeviceSvg(selectedUser?.platform)"></span>
                             <span x-text="selectedUser ? getPlatformName(selectedUser.platform) : ''"></span>
                         </div>
                     </div>
+                </div>
+                <div class="connection-line">
+                    <div class="connection-line-visual"></div>
+                    <div class="connection-status-badge" :class="{'active': transmitting}" x-text="transmitting ? 'Transmitting' : 'Ready'"></div>
                 </div>
             </div>
 
@@ -752,21 +1215,33 @@
 
                 <template x-if="!selectedUser">
                     <div class="drop-zone">
-                        <div class="drop-zone-icon">👈</div>
+                        <div class="drop-zone-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </div>
                         <div class="drop-zone-title">Select a device</div>
-                        <div class="drop-zone-subtitle">Choose a nearby device from the sidebar to start transferring</div>
+                        <div class="drop-zone-subtitle">Choose a nearby device from the sidebar to initiate a secure transfer</div>
                     </div>
                 </template>
 
                 <template x-if="selectedUser && selectedUser.id !== myId">
                     <div class="drop-zone" :class="{'drag-over': dragOver}">
-                        <div class="drop-zone-icon">⚡️</div>
-                        <div class="drop-zone-title" x-text="'Transfer to ' + (selectedUser.username || 'User')"></div>
-                        <div class="drop-zone-subtitle">Drag & drop files here or use the options below</div>
+                        <div class="drop-zone-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                            </svg>
+                        </div>
+                        <div class="drop-zone-title">Transfer to <span x-text="selectedUser.username || 'User'"></span></div>
+                        <div class="drop-zone-subtitle">Drag and drop files here or use the options below to send</div>
 
                         <div class="actions">
                             <button class="btn btn-primary" @click="$refs.fileInput.click()">
-                                <i class="fa-solid fa-file"></i> Choose File
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                </svg>
+                                Choose File
                             </button>
                         </div>
                         <input x-ref="fileInput" type="file" @change="handleFileSelect($event)">
@@ -776,7 +1251,11 @@
                                    placeholder="Type a message or paste a URL..." 
                                    @keyup.enter="sendText()">
                             <button class="btn btn-primary" @click="sendText()">
-                                <i class="fa-solid fa-paper-plane"></i> Send
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="22" y1="2" x2="11" y2="13"/>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                                </svg>
+                                Send
                             </button>
                         </div>
                     </div>
@@ -784,22 +1263,42 @@
 
                 <template x-if="selectedUser && selectedUser.id === myId">
                     <div class="drop-zone">
-                        <div class="drop-zone-icon">🚫</div>
+                        <div class="drop-zone-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="15" y1="9" x2="9" y2="15"/>
+                                <line x1="9" y1="9" x2="15" y2="15"/>
+                            </svg>
+                        </div>
                         <div class="drop-zone-title">Cannot transfer to yourself</div>
-                        <div class="drop-zone-subtitle">Please select another device from the sidebar</div>
+                        <div class="drop-zone-subtitle">Please select another device from the sidebar to continue</div>
                     </div>
                 </template>
 
                 <!-- Transmitting Overlay -->
-                <div x-show="transmitting" class="transmitting-overlay">
+                <div x-show="transmitting" class="transmitting-overlay" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
                     <div class="transmit-animation">
-                        <div class="transmit-ring"></div>
-                        <div class="transmit-ring"></div>
-                        <div class="transmit-ring"></div>
-                        <div class="transmit-core"></div>
+                        <div class="em-ring"></div>
+                        <div class="em-ring"></div>
+                        <div class="em-ring"></div>
+                        <div class="em-ring"></div>
+                        <div class="em-field-lines">
+                            <div class="em-field-line"></div>
+                            <div class="em-field-line"></div>
+                            <div class="em-field-line"></div>
+                            <div class="em-field-line"></div>
+                        </div>
+                        <div class="em-core">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                            </svg>
+                        </div>
                     </div>
                     <div class="transmit-text">Transmitting</div>
                     <div class="transmit-subtext">Sending to <span x-text="selectedUser ? selectedUser.username : ''"></span></div>
+                    <div class="transmit-progress">
+                        <div class="transmit-progress-bar"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -810,7 +1309,17 @@
         <div class="modal-overlay" @click.self="incomingRequest = null">
             <div class="modal">
                 <div class="modal-icon">
-                    <span x-text="incomingRequest.type === 'file' ? '📄' : '💬'"></span>
+                    <template x-if="incomingRequest.type === 'file'">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                    </template>
+                    <template x-if="incomingRequest.type === 'text'">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                    </template>
                 </div>
                 <div class="modal-title">Incoming Transfer</div>
                 <div class="modal-subtitle">
@@ -818,21 +1327,46 @@
                 </div>
 
                 <div class="modal-content" x-show="incomingRequest.type === 'text'">
-                    <div class="modal-content-text" x-text="incomingRequest.content"></div>
+                    <div class="modal-content-text">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        <span x-text="incomingRequest.content"></span>
+                    </div>
                 </div>
 
                 <div class="modal-content" x-show="incomingRequest.type === 'file'">
                     <div class="modal-content-text">
-                        📄 <strong x-text="incomingRequest.filename"></strong>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        <strong x-text="incomingRequest.filename"></strong>
                     </div>
                 </div>
 
                 <div class="modal-actions">
                     <button class="btn" @click="incomingRequest = null">
-                        <i class="fa-solid fa-xmark"></i> Decline
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                        Decline
                     </button>
                     <button class="btn btn-primary" @click="acceptRequest()">
-                        <i :class="incomingRequest.type === 'file' ? 'fa-solid fa-download' : 'fa-solid fa-copy'"></i>
+                        <template x-if="incomingRequest.type === 'file'">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                        </template>
+                        <template x-if="incomingRequest.type === 'text'">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                            </svg>
+                        </template>
                         <span x-text="incomingRequest.type === 'file' ? 'Download' : 'Copy'"></span>
                     </button>
                 </div>
@@ -875,36 +1409,16 @@
                     return this.username.substring(0, 2).toUpperCase();
                 },
 
-                get myDeviceIcon() {
-                    return this.getDeviceIcon(this.myPlatform);
-                },
-
-                get myDeviceColor() {
-                    return this.getDeviceColor(this.myPlatform);
-                },
-
-                getDeviceIcon(platform) {
-                    const icons = {
-                        'iOS': 'fa-brands fa-apple',
-                        'macOS': 'fa-brands fa-apple',
-                        'Windows': 'fa-brands fa-windows',
-                        'Android': 'fa-brands fa-android',
-                        'Linux': 'fa-brands fa-linux',
-                        'Unknown': 'fa-solid fa-laptop'
+                getDeviceSvg(platform) {
+                    const svgs = {
+                        'iOS': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
+                        'macOS': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+                        'Windows': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+                        'Android': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
+                        'Linux': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+                        'Unknown': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'
                     };
-                    return icons[platform] || icons['Unknown'];
-                },
-
-                getDeviceColor(platform) {
-                    const colors = {
-                        'iOS': '#000000',
-                        'macOS': '#000000',
-                        'Windows': '#0078D4',
-                        'Android': '#3DDC84',
-                        'Linux': '#FCC624',
-                        'Unknown': '#737373'
-                    };
-                    return colors[platform] || colors['Unknown'];
+                    return svgs[platform] || svgs['Unknown'];
                 },
 
                 getPlatformName(platform) {
@@ -1070,7 +1584,7 @@
                 },
 
                 handleIncomingSignal(data) {
-                    this.triggerImpact();
+                    this.triggerElectromagneticImpact();
 
                     if (data.type === 'text') {
                         if (this.isValidUrl(data.content)) {
@@ -1106,27 +1620,73 @@
                     }
                 },
 
-                triggerImpact() {
-                    // Viewport shake
+                triggerElectromagneticImpact() {
+                    // Viewport shake with slight rotation for more impact
                     this.shaking = true;
                     setTimeout(() => this.shaking = false, 600);
 
-                    // Flash effect
-                    const flash = document.createElement('div');
-                    flash.className = 'impact-flash';
-                    document.body.appendChild(flash);
-                    setTimeout(() => flash.remove(), 600);
+                    // Electromagnetic shockwave
+                    const shockwave = this.$refs.shockwave;
+                    shockwave.classList.remove('active');
+                    void shockwave.offsetWidth; // Force reflow
+                    shockwave.classList.add('active');
+                    setTimeout(() => shockwave.classList.remove('active'), 1000);
 
-                    // Distortion effect
-                    const distortion = document.createElement('div');
-                    distortion.className = 'distortion-layer';
-                    document.body.appendChild(distortion);
-                    setTimeout(() => distortion.remove(), 600);
+                    // Screen flash
+                    const flash = this.$refs.screenFlash;
+                    flash.classList.remove('active');
+                    void flash.offsetWidth;
+                    flash.classList.add('active');
+                    setTimeout(() => flash.classList.remove('active'), 500);
+
+                    // Scanlines glitch effect
+                    const scanlines = this.$refs.scanlines;
+                    scanlines.classList.remove('active');
+                    void scanlines.offsetWidth;
+                    scanlines.classList.add('active');
+                    setTimeout(() => scanlines.classList.remove('active'), 300);
+
+                    // Particle burst
+                    this.createParticleBurst();
 
                     // Vibration on mobile
                     if (navigator.vibrate) {
-                        navigator.vibrate([50, 30, 50, 30, 50]);
+                        navigator.vibrate([30, 20, 50, 20, 80, 30, 50]);
                     }
+                },
+
+                createParticleBurst() {
+                    const container = this.$refs.particles;
+                    container.innerHTML = '';
+                    
+                    const particleCount = 24;
+                    const centerX = window.innerWidth / 2;
+                    const centerY = window.innerHeight / 2;
+
+                    for (let i = 0; i < particleCount; i++) {
+                        const particle = document.createElement('div');
+                        particle.className = 'em-particle';
+                        
+                        const angle = (i / particleCount) * Math.PI * 2;
+                        const distance = 150 + Math.random() * 200;
+                        const tx = Math.cos(angle) * distance;
+                        const ty = Math.sin(angle) * distance;
+                        
+                        particle.style.left = centerX + 'px';
+                        particle.style.top = centerY + 'px';
+                        particle.style.setProperty('--tx', tx + 'px');
+                        particle.style.setProperty('--ty', ty + 'px');
+                        
+                        container.appendChild(particle);
+                        
+                        requestAnimationFrame(() => {
+                            particle.classList.add('active');
+                        });
+                    }
+
+                    setTimeout(() => {
+                        container.innerHTML = '';
+                    }, 1000);
                 }
             }
         }
