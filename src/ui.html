@@ -444,15 +444,21 @@
                             console.log('[QuickSend] EVENT: Presence Sync');
                             const state = this.channel.presenceState();
                             console.log('[QuickSend] Raw Presence State:', state);
+                            console.log('[QuickSend] My User ID:', this.myId);
 
-                            this.users = [];
+                            const currentUsers = [];
                             for (const id in state) {
-                                state[id].forEach(user => {
-                                    if (user.id !== this.myId) {
-                                        this.users.push(user);
+                                const presenceList = state[id];
+                                presenceList.forEach(user => {
+                                    console.log('[QuickSend] Inspecting user:', user);
+                                    if (user.id && user.id !== this.myId) {
+                                        currentUsers.push(user);
+                                    } else {
+                                        console.log('[QuickSend] Skipping user (Self or Invalid ID):', user.id);
                                     }
                                 });
                             }
+                            this.users = currentUsers;
                             console.log('[QuickSend] Processed User List:', JSON.parse(JSON.stringify(this.users)));
                         })
                         .on('presence', { event: 'join' }, ({ key, newPresences }) => {
